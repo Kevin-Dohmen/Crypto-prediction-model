@@ -1,0 +1,14 @@
+# api
+requests
+
+# data
+h5py
+numpy
+pandas
+
+# model
+tensorflow
+keras
+
+# visualization
+matplotlib
