@@ -1,9 +1,11 @@
 import os
 import h5py
 import pandas as pd
+import numpy as np
 
 from Utils.BinanceDataAPI import BinanceDataAPI
 from Models.BinanceDataModel import BinanceDataCandle
+from Models.CandlesSaveModel import CandlesSaveModel
 
 def main():
     # Example usage of BinanceDataAPI to fetch klines
@@ -22,20 +24,26 @@ def main():
 
         print(len(candles), "candles fetched.")
 
-        candles = pd.DataFrame([candle.to_dict() for candle in candles])
+        candles: pd.DataFrame = pd.DataFrame([candle.to_dict() for candle in candles])
         # Convert timestamps to datetime
-        candles['open_timestamp'] = pd.to_datetime(candles['open_timestamp'], unit='ms')
-        candles['close_timestamp'] = pd.to_datetime(candles['close_timestamp'], unit='ms')
 
         # Set the index to the open timestamp
         candles.set_index('open_timestamp', inplace=True)
         # Sort by open timestamp
         candles.sort_index(inplace=True)
 
-        # save to csv
-        candles.to_csv(f'temp/{Symbol}_{Interval}_candles.csv', index=True)
+        saveModel = CandlesSaveModel(candles=candles)
 
-        print(candles)
+        saveModel.save_to_hdf5(f'temp/{Symbol}_{Interval}_candles.h5')
+        saveModel.save_to_csv(f'temp/{Symbol}_{Interval}_candles.csv')
+
+        print(f"Candles saved to temp/{Symbol}_{Interval}_candles.h5")
+        with h5py.File(f'temp/{Symbol}_{Interval}_candles.h5', 'r') as hf:
+            print("Dataset keys:", list(hf.keys()))
+            print("Candle columns:", list(hf['candles'].keys()))
+
+
+        # print(candles)
 
     except Exception as e:
         print(f"An error occurred: {e}")
